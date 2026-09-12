@@ -1,0 +1,20 @@
+services:
+  courant:
+    image: php:8.2-apache
+    container_name: courant
+    restart: unless-stopped
+    volumes:
+      - ./src:/var/www/html
+    networks:
+      - npm_proxy
+    # Pas de "ports:" exposé sur l'hôte : le trafic entre uniquement via Nginx
+    # Proxy Manager, sur le réseau Docker partagé ci-dessous.
+
+networks:
+  npm_proxy:
+    external: true
+    # Nom du réseau Docker déjà utilisé par Nginx Proxy Manager pour joindre
+    # Codex/Grimoire. Vérifie le nom exact avec `docker network ls` sur ton
+    # hôte OpenWRT et corrige la valeur ci-dessous si besoin (souvent
+    # quelque chose comme "npm_proxy", "proxy" ou "npm_default").
+    name: npm_proxy

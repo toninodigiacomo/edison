@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Courant — la Suisse électrique, en direct</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
+
+  :root{
+    --bg: #14171C;
+    --surface: #1B1F27;
+    --surface-2: #21262F;
+    --border: #2C323C;
+    --text: #EDEFF2;
+    --text-muted: #8B93A1;
+    --solar: #F2A93B;
+    --wind: #3BC9DB;
+    --hydro: #5B8DEF;
+    --nuclear: #9B8AFB;
+    --other: #6B7280;
+    --good: #4ADE80;
+    --bad: #E5484D;
+  }
+
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--text);
+    font-family:'IBM Plex Sans', sans-serif;
+    line-height:1.5;
+    -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3{font-family:'Space Grotesk', sans-serif; margin:0; letter-spacing:-0.01em;}
+  .mono{font-family:'IBM Plex Mono', monospace; font-variant-numeric: tabular-nums;}
+  a{color:var(--solar);}
+
+  .wrap{max-width:1080px; margin:0 auto; padding:0 24px;}
+
+  /* NAV */
+  nav{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:20px 0; border-bottom:1px solid var(--border);
+  }
+  .brand{display:flex; align-items:center; gap:10px;}
+  .brand-mark{
+    width:28px; height:28px; border-radius:6px;
+    background:linear-gradient(135deg, var(--solar), var(--wind));
+    flex-shrink:0;
+  }
+  .brand-name{font-family:'Space Grotesk'; font-weight:700; font-size:18px;}
+  .status{
+    display:flex; align-items:center; gap:8px;
+    font-size:13px; color:var(--text-muted);
+  }
+  .dot{width:8px; height:8px; border-radius:50%; background:var(--good); flex-shrink:0;}
+  .dot.stale{background:var(--text-muted);}
+  @keyframes pulse{0%,100%{opacity:1;} 50%{opacity:.35;}}
+  .dot.live{animation:pulse 2s ease-in-out infinite;}
+
+  /* HERO */
+  .hero{padding:64px 0 40px; border-bottom:1px solid var(--border);}
+  .hero-tag{
+    font-size:14px; color:var(--text-muted); margin-bottom:18px; max-width:520px;
+  }
+  .hero-figure{
+    display:flex; align-items:baseline; gap:16px; flex-wrap:wrap;
+  }
+  .hero-number{
+    font-family:'IBM Plex Mono'; font-weight:600;
+    font-size:clamp(64px, 12vw, 128px);
+    line-height:0.95;
+    color:var(--solar);
+  }
+  .hero-caption{max-width:340px; color:var(--text-muted); font-size:15px;}
+  .hero-caption strong{color:var(--text); font-weight:500;}
+  .hero-sparkline{margin-top:28px; height:64px;}
+
+  /* KPI ROW */
+  .kpis{
+    display:grid; grid-template-columns:repeat(auto-fit, minmax(200px,1fr));
+    gap:1px; background:var(--border);
+    border:1px solid var(--border); border-radius:12px; overflow:hidden;
+    margin:32px 0;
+  }
+  .kpi{background:var(--surface); padding:20px 22px;}
+  .kpi-label{font-size:13px; color:var(--text-muted); margin-bottom:8px;}
+  .kpi-value{font-family:'IBM Plex Mono'; font-size:28px; font-weight:600;}
+  .kpi-sub{font-size:12px; color:var(--text-muted); margin-top:4px;}
+
+  /* SECTIONS */
+  section{padding:48px 0; border-bottom:1px solid var(--border);}
+  .section-head{display:flex; justify-content:space-between; align-items:flex-end; gap:16px; margin-bottom:24px; flex-wrap:wrap;}
+  .section-head h2{font-size:22px;}
+  .section-head p{color:var(--text-muted); font-size:14px; margin:6px 0 0; max-width:480px;}
+  .card{background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:24px;}
+  .chart-box{position:relative; height:300px;}
+  .legend-row{display:flex; flex-wrap:wrap; gap:16px; margin-top:16px;}
+  .legend-item{display:flex; align-items:center; gap:8px; font-size:13px; color:var(--text-muted);}
+  .swatch{width:10px; height:10px; border-radius:2px;}
+
+  /* WEATHER */
+  .city-search{display:flex; gap:8px; margin-bottom:20px;}
+  .city-search input{
+    flex:1; background:var(--surface-2); border:1px solid var(--border); border-radius:8px;
+    color:var(--text); padding:10px 14px; font-family:inherit; font-size:14px;
+  }
+  .city-search input:focus{outline:2px solid var(--wind); outline-offset:-1px;}
+  .city-search button{
+    background:var(--surface-2); border:1px solid var(--border); border-radius:8px;
+    color:var(--text); padding:10px 16px; font-family:inherit; font-size:14px; cursor:pointer;
+  }
+  .city-search button:hover{border-color:var(--wind);}
+  .city-grid{display:grid; grid-template-columns:repeat(auto-fill, minmax(220px,1fr)); gap:14px;}
+  .city-card{background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:18px; position:relative;}
+  .city-card .remove{
+    position:absolute; top:10px; right:10px; background:none; border:none;
+    color:var(--text-muted); cursor:pointer; font-size:16px; line-height:1; padding:2px;
+  }
+  .city-card .remove:hover{color:var(--bad);}
+  .city-name{font-family:'Space Grotesk'; font-weight:600; font-size:16px; margin-bottom:2px;}
+  .city-time{font-size:11px; color:var(--text-muted); margin-bottom:14px;}
+  .city-temp{font-family:'IBM Plex Mono'; font-size:32px; font-weight:600; display:flex; align-items:center; gap:10px;}
+  .city-icon{font-size:28px;}
+  .city-meta{display:flex; gap:16px; margin-top:14px; font-size:13px; color:var(--text-muted);}
+  .city-meta div{display:flex; flex-direction:column; gap:2px;}
+  .city-meta .v{color:var(--text); font-family:'IBM Plex Mono'; font-size:14px;}
+  .city-card.loading .city-temp{color:var(--text-muted);}
+
+  /* FOOTER */
+  footer{padding:40px 0 60px;}
+  .badges{display:flex; flex-wrap:wrap; gap:10px; margin-bottom:24px;}
+  .badge{
+    font-size:12px; color:var(--text-muted); border:1px solid var(--border);
+    border-radius:999px; padding:6px 12px;
+  }
+  .sources{font-size:13px; color:var(--text-muted); max-width:640px;}
+  .sources a{color:var(--text-muted); text-decoration-color:var(--border);}
+  .sources a:hover{color:var(--text);}
+  .note{
+    margin-top:20px; font-size:12px; color:var(--text-muted);
+    border-left:2px solid var(--border); padding-left:12px; max-width:600px;
+  }
+
+  @media (max-width:600px){
+    .hero{padding:44px 0 32px;}
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <nav>
+    <div class="brand">
+      <div class="brand-mark"></div>
+      <div class="brand-name">Courant</div>
+    </div>
+    <div class="status">
+      <span class="dot live" id="statusDot"></span>
+      <span id="statusText">connexion aux flux…</span>
+    </div>
+  </nav>
+
+  <div class="hero">
+    <div class="hero-tag">Vitrine technique open-source — mix électrique suisse et conditions solaires, reconstruits en direct à partir de données publiques. Aucun serveur, aucune clé API : tout est interrogé depuis votre navigateur.</div>
+    <div class="hero-figure">
+      <div class="hero-number mono" id="heroValue">—</div>
+      <div class="hero-caption">Part du <strong>solaire</strong> dans la production électrique nationale, à l'instant.</div>
+    </div>
+    <div class="hero-sparkline"><canvas id="sparkline"></canvas></div>
+  </div>
+
+  <div class="kpis">
+    <div class="kpi">
+      <div class="kpi-label">Production totale</div>
+      <div class="kpi-value mono" id="kpiTotal">—</div>
+      <div class="kpi-sub">toutes sources, réseau suisse</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">Part renouvelable</div>
+      <div class="kpi-value mono" id="kpiRenewable">—</div>
+      <div class="kpi-sub">solaire + éolien + hydraulique + biomasse</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">Dernière mesure</div>
+      <div class="kpi-value mono" id="kpiTime">—</div>
+      <div class="kpi-sub" id="kpiTimeSub">résolution ~15 min</div>
+    </div>
+  </div>
+
+  <section>
+    <div class="section-head">
+      <div>
+        <h2>Mix de production — dernières 24h</h2>
+        <p>Puissance injectée sur le réseau de transport, par source, reconstruite à partir des relevés publiés pour la zone Suisse.</p>
+      </div>
+    </div>
+    <div class="card">
+      <div class="chart-box"><canvas id="mixChart"></canvas></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-head">
+      <div>
+        <h2>Courbe solaire du jour</h2>
+        <p>Production photovoltaïque suisse depuis minuit. Le marqueur indique la mesure la plus récente.</p>
+      </div>
+    </div>
+    <div class="card">
+      <div class="chart-box"><canvas id="solarChart"></canvas></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-head">
+      <div>
+        <h2>Ciel &amp; vent</h2>
+        <p>Le rayonnement solaire et le vent au sol expliquent une bonne part des variations du mix ci-dessus. Ajoutez une ville pour comparer.</p>
+      </div>
+    </div>
+    <div class="city-search">
+      <input type="text" id="citySearch" placeholder="Ajouter une ville (ex. Sion, Fribourg…)" />
+      <button id="cityAddBtn">Ajouter</button>
+    </div>
+    <div class="city-grid" id="cityGrid"></div>
+  </section>
+
+  <footer>
+    <div class="badges">
+      <span class="badge">Sans backend</span>
+      <span class="badge">Sans clé API</span>
+      <span class="badge">Données publiques uniquement</span>
+      <span class="badge">HTML/CSS/JS, aucune dépendance de build</span>
+    </div>
+    <div class="sources">
+      Données de production électrique : <a href="https://www.energy-charts.info" target="_blank" rel="noopener">Energy-Charts</a>, Fraunhofer ISE — licence <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC BY 4.0</a>, alimentée notamment par les publications de Swissgrid.
+      Données météo : <a href="https://open-meteo.com" target="_blank" rel="noopener">Open-Meteo</a> — licence CC BY 4.0.
+    </div>
+    <div class="note">
+      Swissgrid publie ses indicateurs sous forme de graphiques et de bilans mensuels, mais ne propose pas d'API REST publique en temps réel. Ce tableau de bord passe donc par Energy-Charts, qui republie ces données de production sous une licence ouverte et documentée — la même rigueur, avec une interface exploitable.
+    </div>
+  </footer>
+
+</div>
+
+<script>
+// ---------------------------------------------------------------
+// Config
+// ---------------------------------------------------------------
+const ENERGY_API = 'https://api.energy-charts.info/public_power';
+const GEOCODE_API = 'https://geocoding-api.open-meteo.com/v1/search';
+const WEATHER_API = 'https://api.open-meteo.com/v1/forecast';
+
+const CATEGORY_COLORS = {
+  solar: '#F2A93B',
+  wind: '#3BC9DB',
+  hydro: '#5B8DEF',
+  nuclear: '#9B8AFB',
+  other: '#6B7280'
+};
+
+const DEFAULT_CITIES = [
+  { name: 'Genève', lat: 46.2044, lon: 6.1432 },
+  { name: 'Lausanne', lat: 46.5197, lon: 6.6323 },
+  { name: 'Berne', lat: 46.9480, lon: 7.4474 },
+  { name: 'Zurich', lat: 47.3769, lon: 8.5417 }
+];
+
+const WEATHER_ICONS = {
+  0: '☀️', 1: '🌤️', 2: '⛅', 3: '☁️',
+  45: '🌫️', 48: '🌫️',
+  51: '🌦️', 53: '🌦️', 55: '🌦️',
+  61: '🌧️', 63: '🌧️', 65: '🌧️',
+  71: '🌨️', 73: '🌨️', 75: '🌨️',
+  80: '🌦️', 81: '🌧️', 82: '⛈️',
+  95: '⛈️', 96: '⛈️', 99: '⛈️'
+};
+
+let mixChart, solarChart, sparkline;
+
+// ---------------------------------------------------------------
+// Utilities
+// ---------------------------------------------------------------
+function classify(name){
+  const n = name.toLowerCase();
+  if (n.includes('solar')) return 'solar';
+  if (n.includes('wind')) return 'wind';
+  if (n.includes('hydro')) return 'hydro';
+  if (n.includes('nuclear')) return 'nuclear';
+  return 'other';
+}
+
+function fmtTime(date){
+  return date.toLocaleTimeString('fr-CH', { hour: '2-digit', minute: '2-digit' });
+}
+
+function todayRange(){
+  const now = new Date();
+  const start = new Date(now); start.setHours(0,0,0,0);
+  const end = new Date(now); end.setHours(23,59,59,0);
+  const iso = d => d.toISOString().slice(0,10);
+  return { start: iso(start), end: iso(end) };
+}
+
+function setStatus(text, ok = true){
+  document.getElementById('statusText').textContent = text;
+  document.getElementById('statusDot').className = 'dot ' + (ok ? 'live' : 'stale');
+}
+
+// ---------------------------------------------------------------
+// Energy data (Energy-Charts)
+// ---------------------------------------------------------------
+async function loadEnergyData(){
+  const { start, end } = todayRange();
+  const url = `${ENERGY_API}?country=ch&start=${start}&end=${end}`;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error('energy-charts unreachable');
+  const data = await res.json();
+
+  const times = data.unix_seconds.map(s => new Date(s * 1000));
+  const series = data.production_types.map(pt => ({
+    name: pt.name,
+    category: classify(pt.name),
+    data: pt.data.map(v => v === null ? 0 : v)
+  }));
+
+  // aggregate into 5 buckets for the stacked chart + solar series for its own chart
+  const buckets = { solar: null, wind: null, hydro: null, nuclear: null, other: null };
+  series.forEach(s => {
+    if (!buckets[s.category]) buckets[s.category] = new Array(times.length).fill(0);
+    buckets[s.category] = buckets[s.category].map((v,i) => v + s.data[i]);
+  });
+
+  const lastIdx = times.length - 1;
+  const totalsByTime = times.map((_, i) =>
+    Object.values(buckets).reduce((sum, arr) => sum + (arr ? arr[i] : 0), 0)
+  );
+  const total = totalsByTime[lastIdx];
+  const solarNow = buckets.solar ? buckets.solar[lastIdx] : 0;
+  const renewableNow = (buckets.solar?.[lastIdx]||0) + (buckets.wind?.[lastIdx]||0) +
+                        (buckets.hydro?.[lastIdx]||0);
+
+  renderMixChart(times, buckets);
+  renderSolarChart(times, buckets.solar || []);
+  renderSparkline(buckets.solar || []);
+
+  document.getElementById('heroValue').textContent =
+    total > 0 ? Math.round((solarNow/total)*100) + ' %' : '—';
+  document.getElementById('kpiTotal').textContent = Math.round(total).toLocaleString('fr-CH') + ' MW';
+  document.getElementById('kpiRenewable').textContent =
+    total > 0 ? Math.round((renewableNow/total)*100) + ' %' : '—';
+  document.getElementById('kpiTime').textContent = fmtTime(times[lastIdx]);
+  document.getElementById('kpiTimeSub').textContent = times[lastIdx].toLocaleDateString('fr-CH');
+
+  setStatus('flux Energy-Charts à jour · ' + fmtTime(new Date()));
+}
+
+function renderMixChart(times, buckets){
+  const labels = times.map(fmtTime);
+  const datasets = Object.entries(buckets)
+    .filter(([,arr]) => arr)
+    .map(([cat, arr]) => ({
+      label: labelFor(cat),
+      data: arr,
+      backgroundColor: CATEGORY_COLORS[cat],
+      borderWidth: 0,
+      fill: true,
+      stack: 'mix',
+      tension: 0.25,
+      pointRadius: 0
+    }));
+
+  if (mixChart) mixChart.destroy();
+  mixChart = new Chart(document.getElementById('mixChart'), {
+    type: 'line',
+    data: { labels, datasets },
+    options: chartOptions('MW')
+  });
+}
+
+function renderSolarChart(times, solarData){
+  const labels = times.map(fmtTime);
+  if (solarChart) solarChart.destroy();
+  solarChart = new Chart(document.getElementById('solarChart'), {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [{
+        label: 'Solaire',
+        data: solarData,
+        borderColor: CATEGORY_COLORS.solar,
+        backgroundColor: 'rgba(242,169,59,0.15)',
+        fill: true,
+        tension: 0.3,
+        pointRadius: 0,
+        pointHoverRadius: 5
+      }]
+    },
+    options: chartOptions('MW')
+  });
+}
+
+function renderSparkline(solarData){
+  if (sparkline) sparkline.destroy();
+  sparkline = new Chart(document.getElementById('sparkline'), {
+    type: 'line',
+    data: {
+      labels: solarData.map((_,i)=>i),
+      datasets: [{
+        data: solarData,
+        borderColor: '#F2A93B',
+        borderWidth: 2,
+        fill: false,
+        pointRadius: 0,
+        tension: 0.3
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display:false }, tooltip: { enabled:false } },
+      scales: { x: { display:false }, y: { display:false } }
+    }
+  });
+}
+
+function labelFor(cat){
+  return { solar:'Solaire', wind:'Éolien', hydro:'Hydraulique', nuclear:'Nucléaire', other:'Autres' }[cat];
+}
+
+function chartOptions(unit){
+  return {
+    responsive: true,
+    maintainAspectRatio: false,
+    interaction: { mode: 'index', intersect: false },
+    plugins: {
+      legend: { display:false },
+      tooltip: {
+        backgroundColor: '#21262F',
+        borderColor: '#2C323C',
+        borderWidth: 1,
+        titleColor: '#EDEFF2',
+        bodyColor: '#8B93A1',
+        callbacks: { label: c => `${c.dataset.label}: ${Math.round(c.parsed.y).toLocaleString('fr-CH')} ${unit}` }
+      }
+    },
+    scales: {
+      x: { grid: { color:'#2C323C' }, ticks: { color:'#8B93A1', maxTicksLimit:8, font:{family:'IBM Plex Mono', size:11} } },
+      y: { grid: { color:'#2C323C' }, ticks: { color:'#8B93A1', font:{family:'IBM Plex Mono', size:11} } }
+    }
+  };
+}
+
+// ---------------------------------------------------------------
+// Weather (Open-Meteo)
+// ---------------------------------------------------------------
+async function fetchWeather(city){
+  const url = `${WEATHER_API}?latitude=${city.lat}&longitude=${city.lon}` +
+    `&current=temperature_2m,wind_speed_10m,cloud_cover,shortwave_radiation,weather_code&timezone=auto`;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error('open-meteo unreachable');
+  const data = await res.json();
+  return data.current;
+}
+
+function renderCityCard(city, current){
+  const card = document.createElement('div');
+  card.className = 'city-card';
+  const icon = WEATHER_ICONS[current.weather_code] || '🌡️';
+  card.innerHTML = `
+    <button class="remove" title="Retirer">✕</button>
+    <div class="city-name">${city.name}</div>
+    <div class="city-time">maj ${fmtTime(new Date())}</div>
+    <div class="city-temp"><span class="city-icon">${icon}</span>${Math.round(current.temperature_2m)}°C</div>
+    <div class="city-meta">
+      <div>Vent<span class="v">${Math.round(current.wind_speed_10m)} km/h</span></div>
+      <div>Nébulosité<span class="v">${Math.round(current.cloud_cover)}%</span></div>
+      <div>Rayonnement<span class="v">${Math.round(current.shortwave_radiation)} W/m²</span></div>
+    </div>
+  `;
+  card.querySelector('.remove').addEventListener('click', () => card.remove());
+  return card;
+}
+
+async function addCity(city){
+  const grid = document.getElementById('cityGrid');
+  const placeholder = document.createElement('div');
+  placeholder.className = 'city-card loading';
+  placeholder.innerHTML = `<div class="city-name">${city.name}</div><div class="city-temp">…</div>`;
+  grid.appendChild(placeholder);
+  try {
+    const current = await fetchWeather(city);
+    placeholder.replaceWith(renderCityCard(city, current));
+  } catch (e) {
+    placeholder.querySelector('.city-temp').textContent = 'indisponible';
+  }
+}
+
+async function searchCity(query){
+  const url = `${GEOCODE_API}?name=${encodeURIComponent(query)}&count=1&language=fr&format=json`;
+  const res = await fetch(url);
+  const data = await res.json();
+  if (!data.results || !data.results.length) return null;
+  const r = data.results[0];
+  return { name: r.name, lat: r.latitude, lon: r.longitude };
+}
+
+document.getElementById('cityAddBtn').addEventListener('click', async () => {
+  const input = document.getElementById('citySearch');
+  const query = input.value.trim();
+  if (!query) return;
+  const city = await searchCity(query);
+  if (city) { addCity(city); input.value = ''; }
+});
+document.getElementById('citySearch').addEventListener('keydown', e => {
+  if (e.key === 'Enter') document.getElementById('cityAddBtn').click();
+});
+
+// ---------------------------------------------------------------
+// Init
+// ---------------------------------------------------------------
+DEFAULT_CITIES.forEach(addCity);
+
+loadEnergyData().catch(err => setStatus('flux indisponible — nouvelle tentative dans 5 min', false));
+setInterval(() => loadEnergyData().catch(err => setStatus('flux indisponible', false)), 5 * 60 * 1000);
+setInterval(() => DEFAULT_CITIES.forEach(addCity), 15 * 60 * 1000);
+</script>
+
+</body>
+</html>
