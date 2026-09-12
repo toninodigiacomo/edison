@@ -2,13 +2,13 @@
 A 100% static site (HTML/CSS/JS, no PHP code executed) served by php:8.2-apache to ensure it runs on the same platform as my other sites.
 
 ## Structure
-´´´txt
+'''txt
 courant/
 ├── compose.yml
 ├── README.md
 └── src/
     └── index.html   # the complete dashboard (a single page)
-´´´
+'''
 
 ### 1. Shared Docker network with Nginx Proxy Manager
 
