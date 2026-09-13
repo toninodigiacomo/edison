@@ -6,13 +6,12 @@ Licence: (GNU GPL v3.0)[https://github.com/toninodigiacomo/edison/blob/c3f63b122
 
 ## Structure
 ```txt
-edison/
-└── src/                   # mounted in the container at /var/www/html
-    ├── index.html         # the dashboard (a single page, HTML/CSS/JS)
-    ├── api/
-    │   └── energy.php     # server-side proxy to Energy-Charts
-    └── assets/
-        └── edison-icon.png
+edison/                  # mounted in the container at /var/www/html
+  ├── index.html         # the dashboard (a single page, HTML/CSS/JS)
+  ├── api/
+  │   └── energy.php     # server-side proxy to Energy-Charts
+  └── assets/
+      └── edison-icon.png
 ```
 
 ## Why use a PHP proxy for production data
