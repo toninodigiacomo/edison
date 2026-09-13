@@ -27,7 +27,7 @@ Unlike Germany (which provides near real-time data), Swissgrid does not publish 
 Swiss data via Energy-Charts is approximately 24 hours behind.  
 This is normal; it is not a bug — the dashboard explicitly states this (under the ‘Generation mix’ section and the ‘Latest reading’ KPI).
 
-### Deploiment
+## Deploiment
 ```bash
 cd edison/docker
 docker compose up -d
