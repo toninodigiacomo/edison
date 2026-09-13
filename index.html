@@ -3,8 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Courant — la Suisse électrique, en direct</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
+<title>Edison — la Suisse électrique, en direct</title>
+<link rel="icon" type="image/png" href="assets/edison-icon.png">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
 
@@ -38,18 +39,17 @@
   .mono{font-family:'IBM Plex Mono', monospace; font-variant-numeric: tabular-nums;}
   a{color:var(--solar);}
 
-  .wrap{max-width:1080px; margin:0 auto; padding:0 24px;}
+  .wrap{max-width:1080px; margin:0 auto; padding:0 16px;}
 
   /* NAV */
   nav{
     display:flex; align-items:center; justify-content:space-between;
-    padding:20px 0; border-bottom:1px solid var(--border);
+    padding:14px 0; border-bottom:1px solid var(--border);
   }
   .brand{display:flex; align-items:center; gap:10px;}
   .brand-mark{
-    width:28px; height:28px; border-radius:6px;
-    background:linear-gradient(135deg, var(--solar), var(--wind));
-    flex-shrink:0;
+    width:26px; height:26px; border-radius:6px;
+    flex-shrink:0; object-fit:cover;
   }
   .brand-name{font-family:'Space Grotesk'; font-weight:700; font-size:18px;}
   .status{
@@ -62,10 +62,11 @@
   .dot.live{animation:pulse 2s ease-in-out infinite;}
 
   /* HERO */
-  .hero{padding:64px 0 40px; border-bottom:1px solid var(--border);}
+  .hero{padding:16px 0 20px; border-bottom:1px solid var(--border);}
   .hero-tag{
-    font-size:14px; color:var(--text-muted); margin-bottom:18px; max-width:520px;
+    font-size:14px; color:var(--text-muted); margin-bottom:14px; max-width:640px;
   }
+  .hero-tag p{margin:0 0 2px; white-space:nowrap;}
   .hero-figure{
     display:flex; align-items:baseline; gap:16px; flex-wrap:wrap;
   }
@@ -75,7 +76,8 @@
     line-height:0.95;
     color:var(--solar);
   }
-  .hero-caption{max-width:340px; color:var(--text-muted); font-size:15px;}
+  .hero-number .pct{font-size:0.42em; margin-left:2px; vertical-align:0.5em;}
+  .hero-caption{color:var(--text-muted); font-size:15px; white-space:nowrap;}
   .hero-caption strong{color:var(--text); font-weight:500;}
   .hero-sparkline{margin-top:28px; height:64px;}
 
@@ -84,7 +86,7 @@
     display:grid; grid-template-columns:repeat(auto-fit, minmax(200px,1fr));
     gap:1px; background:var(--border);
     border:1px solid var(--border); border-radius:12px; overflow:hidden;
-    margin:32px 0;
+    margin:20px 0;
   }
   .kpi{background:var(--surface); padding:20px 22px;}
   .kpi-label{font-size:13px; color:var(--text-muted); margin-bottom:8px;}
@@ -92,11 +94,11 @@
   .kpi-sub{font-size:12px; color:var(--text-muted); margin-top:4px;}
 
   /* SECTIONS */
-  section{padding:48px 0; border-bottom:1px solid var(--border);}
+  section{padding:24px 0; border-bottom:1px solid var(--border);}
   .section-head{display:flex; justify-content:space-between; align-items:flex-end; gap:16px; margin-bottom:24px; flex-wrap:wrap;}
   .section-head h2{font-size:22px;}
-  .section-head p{color:var(--text-muted); font-size:14px; margin:6px 0 0; max-width:480px;}
-  .card{background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:24px;}
+  .section-head p{color:var(--text-muted); font-size:14px; margin:6px 0 0; white-space:nowrap;}
+  .card{background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:18px;}
   .chart-box{position:relative; height:300px;}
   .legend-row{display:flex; flex-wrap:wrap; gap:16px; margin-top:16px;}
   .legend-item{display:flex; align-items:center; gap:8px; font-size:13px; color:var(--text-muted);}
@@ -156,8 +158,8 @@
 
   <nav>
     <div class="brand">
-      <div class="brand-mark"></div>
-      <div class="brand-name">Courant</div>
+      <img class="brand-mark" src="assets/edison-icon.png" alt="Edison">
+      <div class="brand-name">Edison</div>
     </div>
     <div class="status">
       <span class="dot live" id="statusDot"></span>
@@ -166,10 +168,13 @@
   </nav>
 
   <div class="hero">
-    <div class="hero-tag">Vitrine technique open-source — mix électrique suisse et conditions solaires, reconstruits en direct à partir de données publiques. Aucun serveur, aucune clé API : tout est interrogé depuis votre navigateur.</div>
+    <div class="hero-tag">
+      <p>Vitrine technique open-source — mix électrique suisse et conditions solaires, reconstruits en direct à partir de données publiques.</p>
+      <p>Aucun serveur, aucune clé API : tout est interrogé depuis votre navigateur.</p>
+    </div>
     <div class="hero-figure">
       <div class="hero-number mono" id="heroValue">—</div>
-      <div class="hero-caption">Part du <strong>solaire</strong> dans la production électrique nationale, à l'instant.</div>
+      <div class="hero-caption">Part du <strong>solaire</strong> — mesure du <span id="heroAsOf"></span>.</div>
     </div>
     <div class="hero-sparkline"><canvas id="sparkline"></canvas></div>
   </div>
@@ -188,15 +193,15 @@
     <div class="kpi">
       <div class="kpi-label">Dernière mesure</div>
       <div class="kpi-value mono" id="kpiTime">—</div>
-      <div class="kpi-sub" id="kpiTimeSub">résolution ~15 min</div>
+      <div class="kpi-sub" id="kpiTimeSub">résolution horaire</div>
     </div>
   </div>
 
   <section>
     <div class="section-head">
       <div>
-        <h2>Mix de production — dernières 24h</h2>
-        <p>Puissance injectée sur le réseau de transport, par source, reconstruite à partir des relevés publiés pour la zone Suisse.</p>
+        <h2>Mix de production — 7 derniers jours</h2>
+        <p>Puissance par source, réseau suisse — décalage d'environ 24h (pas de flux temps réel Swissgrid).</p>
       </div>
     </div>
     <div class="card">
@@ -207,8 +212,8 @@
   <section>
     <div class="section-head">
       <div>
-        <h2>Courbe solaire du jour</h2>
-        <p>Production photovoltaïque suisse depuis minuit. Le marqueur indique la mesure la plus récente.</p>
+        <h2>Courbe solaire — 7 derniers jours</h2>
+        <p>Production photovoltaïque suisse, heure par heure.</p>
       </div>
     </div>
     <div class="card">
@@ -220,7 +225,7 @@
     <div class="section-head">
       <div>
         <h2>Ciel &amp; vent</h2>
-        <p>Le rayonnement solaire et le vent au sol expliquent une bonne part des variations du mix ci-dessus. Ajoutez une ville pour comparer.</p>
+        <p>Rayonnement et vent expliquent les variations du mix ci-dessus.</p>
       </div>
     </div>
     <div class="city-search">
@@ -238,11 +243,7 @@
       <span class="badge">HTML/CSS/JS, aucune dépendance de build</span>
     </div>
     <div class="sources">
-      Données de production électrique : <a href="https://www.energy-charts.info" target="_blank" rel="noopener">Energy-Charts</a>, Fraunhofer ISE — licence <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC BY 4.0</a>, alimentée notamment par les publications de Swissgrid.
-      Données météo : <a href="https://open-meteo.com" target="_blank" rel="noopener">Open-Meteo</a> — licence CC BY 4.0.
-    </div>
-    <div class="note">
-      Swissgrid publie ses indicateurs sous forme de graphiques et de bilans mensuels, mais ne propose pas d'API REST publique en temps réel. Ce tableau de bord passe donc par Energy-Charts, qui republie ces données de production sous une licence ouverte et documentée — la même rigueur, avec une interface exploitable.
+      Données : <a href="https://www.energy-charts.info" target="_blank" rel="noopener">Energy-Charts</a> (Fraunhofer ISE, CC BY 4.0) · <a href="https://open-meteo.com" target="_blank" rel="noopener">Open-Meteo</a> (CC BY 4.0).
     </div>
   </footer>
 
@@ -252,7 +253,7 @@
 // ---------------------------------------------------------------
 // Config
 // ---------------------------------------------------------------
-const ENERGY_API = 'https://api.energy-charts.info/public_power';
+const ENERGY_API = 'api/energy.php'; // proxy PHP côté serveur, voir api/energy.php
 const GEOCODE_API = 'https://geocoding-api.open-meteo.com/v1/search';
 const WEATHER_API = 'https://api.open-meteo.com/v1/forecast';
 
@@ -286,25 +287,23 @@ let mixChart, solarChart, sparkline;
 // ---------------------------------------------------------------
 // Utilities
 // ---------------------------------------------------------------
-function classify(name){
-  const n = name.toLowerCase();
-  if (n.includes('solar')) return 'solar';
-  if (n.includes('wind')) return 'wind';
-  if (n.includes('hydro')) return 'hydro';
-  if (n.includes('nuclear')) return 'nuclear';
-  return 'other';
+function classify(id){
+  if (id === 'solar') return 'solar';
+  if (id.startsWith('wind')) return 'wind';
+  if (id.startsWith('hydro')) return 'hydro';
+  if (id === 'nuclear') return 'nuclear';
+  if (id === 'others') return 'other';
+  return null; // exclut load, residual_load, les parts %, les échanges transfrontaliers…
 }
 
 function fmtTime(date){
   return date.toLocaleTimeString('fr-CH', { hour: '2-digit', minute: '2-digit' });
 }
 
-function todayRange(){
-  const now = new Date();
-  const start = new Date(now); start.setHours(0,0,0,0);
-  const end = new Date(now); end.setHours(23,59,59,0);
-  const iso = d => d.toISOString().slice(0,10);
-  return { start: iso(start), end: iso(end) };
+function fmtDayHour(date){
+  // Utilisé pour les axes des graphiques sur 7 jours : jour + heure, plus lisible
+  // qu'une simple heure quand les points s'étalent sur plusieurs jours.
+  return date.toLocaleString('fr-CH', { day: '2-digit', month: '2-digit', hour: '2-digit' }).replace(',', '');
 }
 
 function setStatus(text, ok = true){
@@ -316,18 +315,19 @@ function setStatus(text, ok = true){
 // Energy data (Energy-Charts)
 // ---------------------------------------------------------------
 async function loadEnergyData(){
-  const { start, end } = todayRange();
-  const url = `${ENERGY_API}?country=ch&start=${start}&end=${end}`;
+  const url = `${ENERGY_API}?country=ch`;
   const res = await fetch(url);
-  if (!res.ok) throw new Error('energy-charts unreachable');
+  if (!res.ok) throw new Error(`HTTP ${res.status} sur ${url}`);
   const data = await res.json();
 
-  const times = data.unix_seconds.map(s => new Date(s * 1000));
-  const series = data.production_types.map(pt => ({
-    name: pt.name,
-    category: classify(pt.name),
-    data: pt.data.map(v => v === null ? 0 : v)
-  }));
+  const times = data.data.map(point => new Date(point.timestamp));
+  const series = data.series
+    .map(s => ({ id: s.id, category: classify(s.id) }))
+    .filter(s => s.category)
+    .map(s => ({
+      ...s,
+      data: data.data.map(point => point.values[s.id] ?? 0)
+    }));
 
   // aggregate into 5 buckets for the stacked chart + solar series for its own chart
   const buckets = { solar: null, wind: null, hydro: null, nuclear: null, other: null };
@@ -342,36 +342,37 @@ async function loadEnergyData(){
   );
   const total = totalsByTime[lastIdx];
   const solarNow = buckets.solar ? buckets.solar[lastIdx] : 0;
-  const renewableNow = (buckets.solar?.[lastIdx]||0) + (buckets.wind?.[lastIdx]||0) +
-                        (buckets.hydro?.[lastIdx]||0);
+  const renewableShareNow = data.data[lastIdx]?.values?.renewable_share_of_generation;
 
   renderMixChart(times, buckets);
   renderSolarChart(times, buckets.solar || []);
   renderSparkline(buckets.solar || []);
 
-  document.getElementById('heroValue').textContent =
-    total > 0 ? Math.round((solarNow/total)*100) + ' %' : '—';
+  document.getElementById('heroValue').innerHTML =
+    total > 0 ? Math.round((solarNow/total)*100) + '<span class="pct">%</span>' : '—';
   document.getElementById('kpiTotal').textContent = Math.round(total).toLocaleString('fr-CH') + ' MW';
   document.getElementById('kpiRenewable').textContent =
-    total > 0 ? Math.round((renewableNow/total)*100) + ' %' : '—';
+    renewableShareNow != null ? Math.round(renewableShareNow) + ' %' : '—';
   document.getElementById('kpiTime').textContent = fmtTime(times[lastIdx]);
   document.getElementById('kpiTimeSub').textContent = times[lastIdx].toLocaleDateString('fr-CH');
+  document.getElementById('heroAsOf').textContent =
+    `du ${times[lastIdx].toLocaleDateString('fr-CH')} ${fmtTime(times[lastIdx])}`;
 
   setStatus('flux Energy-Charts à jour · ' + fmtTime(new Date()));
 }
 
 function renderMixChart(times, buckets){
-  const labels = times.map(fmtTime);
+  const labels = times.map(fmtDayHour);
   const datasets = Object.entries(buckets)
     .filter(([,arr]) => arr)
     .map(([cat, arr]) => ({
       label: labelFor(cat),
       data: arr,
+      borderColor: CATEGORY_COLORS[cat],
       backgroundColor: CATEGORY_COLORS[cat],
-      borderWidth: 0,
-      fill: true,
-      stack: 'mix',
-      tension: 0.25,
+      borderWidth: 2,
+      fill: false,
+      tension: 0,
       pointRadius: 0
     }));
 
@@ -379,12 +380,12 @@ function renderMixChart(times, buckets){
   mixChart = new Chart(document.getElementById('mixChart'), {
     type: 'line',
     data: { labels, datasets },
-    options: chartOptions('MW')
+    options: chartOptions('MW', true)
   });
 }
 
 function renderSolarChart(times, solarData){
-  const labels = times.map(fmtTime);
+  const labels = times.map(fmtDayHour);
   if (solarChart) solarChart.destroy();
   solarChart = new Chart(document.getElementById('solarChart'), {
     type: 'line',
@@ -396,7 +397,7 @@ function renderSolarChart(times, solarData){
         borderColor: CATEGORY_COLORS.solar,
         backgroundColor: 'rgba(242,169,59,0.15)',
         fill: true,
-        tension: 0.3,
+        tension: 0,
         pointRadius: 0,
         pointHoverRadius: 5
       }]
@@ -432,13 +433,18 @@ function labelFor(cat){
   return { solar:'Solaire', wind:'Éolien', hydro:'Hydraulique', nuclear:'Nucléaire', other:'Autres' }[cat];
 }
 
-function chartOptions(unit){
+function chartOptions(unit, showLegend = false){
   return {
     responsive: true,
     maintainAspectRatio: false,
     interaction: { mode: 'index', intersect: false },
     plugins: {
-      legend: { display:false },
+      legend: {
+        display: showLegend,
+        position: 'top',
+        align: 'start',
+        labels: { color:'#8B93A1', font:{family:'IBM Plex Sans', size:12}, boxWidth:10, boxHeight:10, usePointStyle:true }
+      },
       tooltip: {
         backgroundColor: '#21262F',
         borderColor: '#2C323C',
@@ -525,8 +531,13 @@ document.getElementById('citySearch').addEventListener('keydown', e => {
 // ---------------------------------------------------------------
 DEFAULT_CITIES.forEach(addCity);
 
-loadEnergyData().catch(err => setStatus('flux indisponible — nouvelle tentative dans 5 min', false));
-setInterval(() => loadEnergyData().catch(err => setStatus('flux indisponible', false)), 5 * 60 * 1000);
+function reportEnergyError(err){
+  console.error('[Edison] échec du chargement Energy-Charts:', err);
+  setStatus('flux indisponible (' + err.message + ') — nouvelle tentative dans 5 min', false);
+}
+
+loadEnergyData().catch(reportEnergyError);
+setInterval(() => loadEnergyData().catch(reportEnergyError), 5 * 60 * 1000);
 setInterval(() => DEFAULT_CITIES.forEach(addCity), 15 * 60 * 1000);
 </script>
 
