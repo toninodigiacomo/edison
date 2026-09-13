@@ -16,8 +16,8 @@ edison/                  # mounted in the container at /var/www/html
 
 ## Why use a PHP proxy for production data
 **The site uses two public APIs:**  
-**Open-Meteo** (weather, solar radiation) called directly from the browser, with no issues: reliable CORS, no key required.
-**Energy-Charts** (Swiss energy mix) called server-side via api/energy.php, not directly from the browser.  
+- **Open-Meteo** (weather, solar radiation) called directly from the browser, with no issues: reliable CORS, no key required.
+- **Energy-Charts** (Swiss energy mix) called server-side via api/energy.php, not directly from the browser.  
 Tests have shown inconsistent responses (403/404) depending on the origin of the request; the server-to-server call is reliable.  
   
 ```energy.php``` queries https://api.energy-charts.info/v2/public_power?country=ch using a 7-day rolling start/end window, rounded to the nearest full hour (the API rejects non-aligned timestamps); caches the result for 15 minutes in a temporary file, so as not to query the API every time the page is loaded; serves a slightly out-of-date response rather than an error if the upstream server is temporarily unavailable.
