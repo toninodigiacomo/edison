@@ -34,7 +34,7 @@ docker compose up -d
 ```
 ⚠️​ Update the docker file as per your need.  
 
-**Image** ```php:8.2-apache``` no custom Dockerfile.
+**Image** ```php:8.2-apache``` no custom Dockerfile.  
 **Container name** edison, port hôte 8218:80 (debug direct access ```http://YOUR.PRIVATE.IP:8218```).
   
 > [!NOTE]
