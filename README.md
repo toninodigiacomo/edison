@@ -1,45 +1,43 @@
-# edison
-A 100% static site (HTML/CSS/JS, no PHP code executed) served by php:8.2-apache to ensure it runs on the same platform as my other sites.
+# Edison
+Open-source technical dashboard: the Swiss electricity mix and solar conditions, reconstructed in real time using public data (Energy-Charts / Fraunhofer ISE, Open-Meteo). No database, no API key.  
+Online: https://edison.vektoriel.com  
+Code: https://github.com/toninodigiacomo/edison  
+Licence: (GNU GPL v3.0)[https://github.com/toninodigiacomo/edison/blob/c3f63b1225cc023d5770c7bbd8114a48fefc62b6/LICENSE.md]
 
 ## Structure
 ```txt
-courant/
-├── README.md
-└── src/
-    └── index.html   # the complete dashboard (a single page)
-└── docker/
-    └── compose.yml
+edison/
+└── src/                   # mounted in the container at /var/www/html
+    ├── index.html         # the dashboard (a single page, HTML/CSS/JS)
+    ├── api/
+    │   └── energy.php     # server-side proxy to Energy-Charts
+    └── assets/
+        └── edison-icon.png
 ```
 
-### 1. Shared Docker network with Nginx Proxy Manager
+## Why use a PHP proxy for production data
+The site uses two public APIs:  
+**Open-Meteo** (weather, solar radiation) called directly from the browser, with no issues: reliable CORS, no key required.
+**Energy-Charts** (Swiss energy mix) called server-side via api/energy.php, not directly from the browser.  
+Tests have shown inconsistent responses (403/404) depending on the origin of the request; the server-to-server call is reliable.  
+  
+```energy.php``` queries https://api.energy-charts.info/v2/public_power?country=ch using a 7-day rolling start/end window, rounded to the nearest full hour (the API rejects non-aligned timestamps); caches the result for 15 minutes in a temporary file, so as not to query the API every time the page is loaded; serves a slightly out-of-date response rather than an error if the upstream server is temporarily unavailable.
 
-compose.yml assumes an external network named npm_proxy. Check using:
+## Time lag in Swiss data
+Unlike Germany (which provides near real-time data), Swissgrid does not publish official real-time flow data.  
+Swiss data via Energy-Charts is approximately 24 hours behind.  
+This is normal; it is not a bug — the dashboard explicitly states this (under the ‘Generation mix’ section and the ‘Latest reading’ KPI).
 
+### Deploiment
 ```bash
-docker network ls
-docker inspect <container_codex_ou_grimoire> --format '{{json .NetworkSettings.Networks}}'
-```
-
-… and adjust the `name` value in `compose.yml` accordingly.
-
-### 2. Start the service
-```bash
-cd courant
+cd edison/docker
 docker compose up -d
 ```
+⚠️​ Update the docker file as per your need.  
 
-A standard container does not expose any ports on the host: it can only be accessed via the shared Docker network.
-
-### 3. Configure the Proxy Host in Nginx Proxy Manager
-Domain Names: edison.vektoriel.com
-Scheme: http
-Forward Hostname / IP: courant (the service name = internal DNS name on the Docker network)
-Forward Port: 80
-SSL: enable, request a Let’s Encrypt certificate, force HTTPS
-
-### 4. DNS
-Add a CNAME or A record for courant.vektoriel.com pointing to your public IP address or dynamic domain, as with the other subdomains already described.
-
-> Notes  
-> No environment variables, no database: the site simply makes browser-side fetch() calls to Open-Meteo and Energy-Charts.
-> No build process: the contents of `src/` are mounted as-is in `/var/www/html`. Any changes to `index.html` take effect immediately (simply reloading the page is sufficient; there is no need to restart the container).
+**Image** ```php:8.2-apache``` no custom Dockerfile.
+**Container name** edison, port hôte 8218:80 (accès direct de debug, ex. http://192.168.0.XYZ:8218).
+  
+> [!NOTE]
+> All the rendering (graphs, weather maps) is done using plain JavaScript and Chart.js (CDN), with no build process required: simply edit src/index.html, and a page reload is all that’s needed.  
+> The two banners (top: logo/status; bottom: GitHub link/copyright) are fixed in place using CSS (position: fixed), with corresponding padding applied to the body element so as not to obscure the content.

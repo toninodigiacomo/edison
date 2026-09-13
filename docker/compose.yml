@@ -1,7 +1,7 @@
 services:
-  courant:
+  edison:
     image: php:8.2-apache
-    container_name: courant
+    container_name: edison
     restart: unless-stopped
     volumes:
       - ./src:/var/www/html

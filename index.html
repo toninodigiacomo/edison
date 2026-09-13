@@ -42,19 +42,41 @@
   .wrap{max-width:1080px; margin:0 auto; padding:0 16px;}
 
   /* NAV */
+  .topbar{
+    position:fixed; top:0; left:0; right:0; z-index:100;
+    background:var(--bg); border-bottom:1px solid var(--border);
+  }
+  .topbar .wrap{ padding-top:0; padding-bottom:0; }
   nav{
     display:flex; align-items:center; justify-content:space-between;
-    padding:14px 0; border-bottom:1px solid var(--border);
+    padding:11px 0;
   }
+  .bottombar{
+    position:fixed; bottom:0; left:0; right:0; z-index:100;
+    background:var(--bg); border-top:1px solid var(--border);
+  }
+  .bottombar .wrap{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:12px 0; font-size:12px; color:var(--text-muted);
+  }
+  .bottombar-link{
+    display:flex; align-items:center; gap:6px;
+    color:var(--text-muted); text-decoration:none;
+  }
+  .bottombar-group{ display:flex; align-items:center; gap:10px; }
+  .bottombar-link:hover{ color:var(--text); }
+  .bottombar-copy a{ color:var(--text-muted); }
+  .bottombar-copy a:hover{ color:var(--text); }
+  body{ padding-top:72px; padding-bottom:41px; }
   .brand{display:flex; align-items:center; gap:10px;}
   .brand-mark{
-    width:26px; height:26px; border-radius:6px;
+    width:48px; height:48px; border-radius:10px;
     flex-shrink:0; object-fit:cover;
   }
-  .brand-name{font-family:'Space Grotesk'; font-weight:700; font-size:18px;}
+  .brand-name{font-family:'Space Grotesk'; font-weight:700; font-size:22px;}
   .status{
     display:flex; align-items:center; gap:8px;
-    font-size:13px; color:var(--text-muted);
+    font-size:14px; color:var(--text-muted);
   }
   .dot{width:8px; height:8px; border-radius:50%; background:var(--good); flex-shrink:0;}
   .dot.stale{background:var(--text-muted);}
@@ -154,18 +176,22 @@
 </head>
 <body>
 
-<div class="wrap">
+<div class="topbar">
+  <div class="wrap">
+    <nav>
+      <div class="brand">
+        <img class="brand-mark" src="assets/edison-icon.png" alt="Edison">
+        <div class="brand-name">Edison</div>
+      </div>
+      <div class="status">
+        <span class="dot live" id="statusDot"></span>
+        <span id="statusText">connexion aux flux…</span>
+      </div>
+    </nav>
+  </div>
+</div>
 
-  <nav>
-    <div class="brand">
-      <img class="brand-mark" src="assets/edison-icon.png" alt="Edison">
-      <div class="brand-name">Edison</div>
-    </div>
-    <div class="status">
-      <span class="dot live" id="statusDot"></span>
-      <span id="statusText">connexion aux flux…</span>
-    </div>
-  </nav>
+<div class="wrap">
 
   <div class="hero">
     <div class="hero-tag">
@@ -174,7 +200,7 @@
     </div>
     <div class="hero-figure">
       <div class="hero-number mono" id="heroValue">—</div>
-      <div class="hero-caption">Part du <strong>solaire</strong> — mesure du <span id="heroAsOf"></span>.</div>
+      <div class="hero-caption">Part moyenne du <strong>solaire</strong> à 13h00, sur les 7 derniers jours.</div>
     </div>
     <div class="hero-sparkline"><canvas id="sparkline"></canvas></div>
   </div>
@@ -247,6 +273,19 @@
     </div>
   </footer>
 
+</div>
+
+<div class="bottombar">
+  <div class="wrap">
+    <div class="bottombar-group">
+      <a href="https://github.com/toninodigiacomo/edison" target="_blank" rel="noopener" class="bottombar-link">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>
+        GitHub
+      </a>
+      <span class="bottombar-copy">Code sous licence <a href="https://github.com/toninodigiacomo/edison/blob/c3f63b1225cc023d5770c7bbd8114a48fefc62b6/LICENSE.md" target="_blank" rel="noopener">GNU GPL v3.0</a></span>
+    </div>
+    <span class="bottombar-copy">© <a href="https://vektoriel.com" target="_blank" rel="noopener">Vektoriel</a></span>
+  </div>
 </div>
 
 <script>
@@ -341,22 +380,30 @@ async function loadEnergyData(){
     Object.values(buckets).reduce((sum, arr) => sum + (arr ? arr[i] : 0), 0)
   );
   const total = totalsByTime[lastIdx];
-  const solarNow = buckets.solar ? buckets.solar[lastIdx] : 0;
   const renewableShareNow = data.data[lastIdx]?.values?.renewable_share_of_generation;
+
+  // Part moyenne du solaire à 13h00 (heure la plus productive), sur les jours
+  // disponibles dans la fenêtre de 7 jours.
+  const shareAt13 = times
+    .map((t, i) => ({ hour: t.getHours(), i }))
+    .filter(({ hour }) => hour === 13)
+    .map(({ i }) => (totalsByTime[i] > 0 ? ((buckets.solar?.[i] || 0) / totalsByTime[i]) * 100 : null))
+    .filter(v => v !== null);
+  const avgShareAt13 = shareAt13.length
+    ? shareAt13.reduce((a, b) => a + b, 0) / shareAt13.length
+    : null;
 
   renderMixChart(times, buckets);
   renderSolarChart(times, buckets.solar || []);
   renderSparkline(buckets.solar || []);
 
   document.getElementById('heroValue').innerHTML =
-    total > 0 ? Math.round((solarNow/total)*100) + '<span class="pct">%</span>' : '—';
+    avgShareAt13 != null ? Math.round(avgShareAt13) + '<span class="pct">%</span>' : '—';
   document.getElementById('kpiTotal').textContent = Math.round(total).toLocaleString('fr-CH') + ' MW';
   document.getElementById('kpiRenewable').textContent =
     renewableShareNow != null ? Math.round(renewableShareNow) + ' %' : '—';
   document.getElementById('kpiTime').textContent = fmtTime(times[lastIdx]);
   document.getElementById('kpiTimeSub').textContent = times[lastIdx].toLocaleDateString('fr-CH');
-  document.getElementById('heroAsOf').textContent =
-    `du ${times[lastIdx].toLocaleDateString('fr-CH')} ${fmtTime(times[lastIdx])}`;
 
   setStatus('flux Energy-Charts à jour · ' + fmtTime(new Date()));
 }
