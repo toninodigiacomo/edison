@@ -35,7 +35,7 @@ docker compose up -d
 ⚠️​ Update the docker file as per your need.  
 
 **Image** ```php:8.2-apache``` no custom Dockerfile.
-**Container name** edison, port hôte 8218:80 (accès direct de debug, ex. http://192.168.0.XYZ:8218).
+**Container name** edison, port hôte 8218:80 (debug direct access ```http://YOUR.PRIVATE.IP:8218```).
   
 > [!NOTE]
 > All the rendering (graphs, weather maps) is done using plain JavaScript and Chart.js (CDN), with no build process required: simply edit src/index.html, and a page reload is all that’s needed.  
