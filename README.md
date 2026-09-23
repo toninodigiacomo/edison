@@ -40,3 +40,8 @@ docker compose up -d
 > [!NOTE]
 > All the rendering (graphs, weather maps) is done using plain JavaScript and Chart.js (CDN), with no build process required: simply edit src/index.html, and a page reload is all that’s needed.  
 > The two banners (top: logo/status; bottom: GitHub link/copyright) are fixed in place using CSS (position: fixed), with corresponding padding applied to the body element so as not to obscure the content.
+
+---
+
+## License
+**GNU GPL v3.0** [LICENCE.md](https://github.com/toninodigiacomo/codex/blob/ced88567378bde78b3d0e61ee955449f240510e1/LICENSE.md)
