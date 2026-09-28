@@ -1,3 +1,5 @@
+<p align="center"><img src="assets/edison-icon.png" width="140" alt="Vigie logo"></p>
+
 # Edison
 Open-source technical dashboard: the Swiss electricity mix and solar conditions, reconstructed in real time using public data (Energy-Charts / Fraunhofer ISE, Open-Meteo). No database, no API key.  
 Online: https://edison.vektoriel.com  
