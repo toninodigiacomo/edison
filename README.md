@@ -3,9 +3,6 @@
 # Edison
 Open-source technical dashboard: the Swiss electricity mix and solar conditions, reconstructed in real time using public data (Energy-Charts / Fraunhofer ISE, Open-Meteo). No database, no API key.  
 Online: https://edison.vektoriel.com  
-Code: https://github.com/toninodigiacomo/edison  
-Licence: (GNU GPL v3.0)[https://github.com/toninodigiacomo/edison/blob/c3f63b1225cc023d5770c7bbd8114a48fefc62b6/LICENSE.md]
-
 ## Structure
 ```txt
 edison/                  # mounted in the container at /var/www/html
